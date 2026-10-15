@@ -6,7 +6,7 @@ import android.database.CursorWindow
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.compose.setContent
+import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -14,8 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.graphics.Insets
 import androidx.core.util.Consumer
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -23,11 +27,13 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.profileinstaller.ProfileInstallerInitializer
 import androidx.work.WorkManager
 import coil.ImageLoader
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
 import java.lang.reflect.Field
 import javax.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import me.ash.reader.R
 import me.ash.reader.domain.data.FilterStateUseCase
 import me.ash.reader.domain.service.AccountService
 import me.ash.reader.domain.service.WidgetUpdateWorker
@@ -43,6 +49,7 @@ import me.ash.reader.ui.ext.languages
 import me.ash.reader.ui.page.common.ExtraName
 import me.ash.reader.ui.page.home.feeds.subscribe.SubscribeViewModel
 import me.ash.reader.ui.page.nav3.AppEntry
+import me.ash.reader.ui.page.nav3.BottomNavBridge
 import me.ash.reader.ui.page.nav3.key.Route
 import me.ash.reader.ui.page.nav3.key.Route.*
 import me.ash.reader.ui.theme.AppTheme
@@ -59,6 +66,11 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var workManager: WorkManager
 
     @Inject lateinit var filterUseCase: FilterStateUseCase
+
+    private lateinit var composeHost: ComposeView
+    private lateinit var bottomBar: BottomNavigationView
+    private var isTopLevelDestination = false
+    private var isImeVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,7 +107,13 @@ class MainActivity : AppCompatActivity() {
             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
 
-        setContent {
+        setContentView(R.layout.activity_main)
+        composeHost = findViewById(R.id.compose_view)
+        bottomBar = findViewById(R.id.bottom_nav)
+        bottomBar.selectedItemId = R.id.nav_inbox // app starts on Inbox (Feeds)
+        setUpBottomBarInsets()
+
+        composeHost.setContent {
             AccountSettingsProvider(accountService = accountService) {
                 settingsProvider.ProvidesSettings {
                     val subscribeViewModel: SubscribeViewModel = hiltViewModel()
@@ -138,11 +156,53 @@ class MainActivity : AppCompatActivity() {
 
                             val backStack = rememberNavBackStack(*startDestination.toTypedArray())
 
+                            BottomNavBridge(
+                                backStack = backStack,
+                                bottomNav = bottomBar,
+                                onTopLevelChanged = {
+                                    isTopLevelDestination = it
+                                    refreshBottomBar()
+                                },
+                            )
                             NewIntentHandlerEffect(backStack, subscribeViewModel)
                             AppEntry(backStack)
                         }
                     }
                 }
+            }
+        }
+    }
+
+    /** The bar is only shown on tab destinations, and hidden while the keyboard is open. */
+    private fun refreshBottomBar() {
+        val target = if (isTopLevelDestination && !isImeVisible) View.VISIBLE else View.GONE
+        if (bottomBar.visibility != target) {
+            bottomBar.visibility = target
+            ViewCompat.requestApplyInsets(composeHost)
+        }
+    }
+
+    /**
+     * While the bottom bar is visible it already pads itself for the navigation bar, so the
+     * Compose content must not apply that inset a second time.
+     */
+    private fun setUpBottomBarInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(composeHost) { _, insets ->
+            val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            if (imeVisible != isImeVisible) {
+                isImeVisible = imeVisible
+                composeHost.post { refreshBottomBar() }
+            }
+            if (bottomBar.visibility == View.VISIBLE) {
+                val nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+                WindowInsetsCompat.Builder(insets)
+                    .setInsets(
+                        WindowInsetsCompat.Type.navigationBars(),
+                        Insets.of(nav.left, nav.top, nav.right, 0),
+                    )
+                    .build()
+            } else {
+                insets
             }
         }
     }
