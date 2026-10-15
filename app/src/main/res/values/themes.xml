@@ -13,4 +13,12 @@
             @drawable/ic_launcher_splash_screen
         </item>
     </style>
+
+    <!--
+        Applied only to the MDC BottomNavigationView (android:theme in activity_main.xml).
+        Theme.Reader is a platform theme, which Material Components can't inflate under,
+        so this gives that one view a Material3 context. Colors are synced from the
+        Compose theme at runtime (see BottomNavBridge).
+    -->
+    <style name="ThemeOverlay.Reader.BottomNav" parent="Theme.Material3.DayNight.NoActionBar" />
 </resources>
