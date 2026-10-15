@@ -182,6 +182,7 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.activity.compose)
     implementation(libs.appcompat)
+    implementation(libs.material)
     implementation(libs.glance.appwidget)
     implementation(libs.glance.appwidget.preview)
     implementation(libs.glance.material3)
