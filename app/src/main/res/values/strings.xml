@@ -259,6 +259,9 @@
     <string name="google_reader_desc" translatable="false">Google Reader API</string>
     <string name="fever_desc">Deprecated. Not recommended.</string>
     <string name="more">More</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_inbox">Inbox</string>
+    <string name="nav_subscription">Subscription</string>
     <string name="add_accounts">Add accounts</string>
     <string name="list">List</string>
     <string name="add_accounts_desc">Local, services, self-hosted</string>
