@@ -9,8 +9,12 @@ sealed interface Route : NavKey {
     // Startup
     @Serializable data object Startup : Route
 
-    // Home
+    // Bottom navigation tabs (Inbox = Feeds)
+    @Serializable data object Home : Route
+
     @Serializable data object Feeds : Route
+
+    @Serializable data object Subscription : Route
 
     //    @Serializable data object Flow : Route
 
