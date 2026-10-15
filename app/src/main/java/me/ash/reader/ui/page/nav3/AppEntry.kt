@@ -14,6 +14,7 @@ import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -24,11 +25,13 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.coroutines.delay
+import me.ash.reader.R
 import me.ash.reader.ui.motion.materialSharedAxisXIn
 import me.ash.reader.ui.motion.materialSharedAxisXOut
 import me.ash.reader.ui.page.adaptive.ArticleData
 import me.ash.reader.ui.page.adaptive.ArticleListReaderPage
 import me.ash.reader.ui.page.adaptive.ArticleListReaderViewModel
+import me.ash.reader.ui.page.comingsoon.ComingSoonPage
 import me.ash.reader.ui.page.home.feeds.FeedsPage
 import me.ash.reader.ui.page.home.feeds.subscribe.SubscribeViewModel
 import me.ash.reader.ui.page.nav3.key.Route
@@ -121,6 +124,22 @@ fun AppEntry(backStack: NavBackStack<NavKey>) {
                                 navigateToAccountDetail = {
                                     backStack.add(Route.AccountDetails(it))
                                 },
+                            )
+                        }
+                    }
+                    Route.Home -> {
+                        NavEntry(key) {
+                            ComingSoonPage(
+                                iconRes = R.drawable.ic_nav_home,
+                                title = stringResource(R.string.nav_home),
+                            )
+                        }
+                    }
+                    Route.Subscription -> {
+                        NavEntry(key) {
+                            ComingSoonPage(
+                                iconRes = R.drawable.ic_nav_subscription,
+                                title = stringResource(R.string.nav_subscription),
                             )
                         }
                     }
